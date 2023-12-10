@@ -87,7 +87,7 @@ fn score_and_spawn_new_circles(
 }
 
 fn move_target_circles(
-    mut transform_query: Query<(&mut Transform, &Offset), (With<Interactable>)>,
+    mut transform_query: Query<(&mut Transform, &Offset), With<Interactable>>,
     time: Res<Time>,
 ) {
     let delta_time = time.delta_seconds() * 400.;
