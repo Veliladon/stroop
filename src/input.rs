@@ -9,8 +9,8 @@ pub struct LeftClickEvent {
 
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Update, cursor_system)
-        .run();
+        app.add_systems(PreUpdate, cursor_system)
+            .add_event::<LeftClickEvent>();
     }
 }
 
