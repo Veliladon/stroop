@@ -1,3 +1,4 @@
+use crate::*;
 use bevy::prelude::*;
 
 pub struct InputPlugin;
@@ -9,13 +10,15 @@ pub struct LeftClickEvent {
 
 impl Plugin for InputPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PreUpdate, cursor_system)
+        app.add_systems(PreUpdate, cursor_system.run_if(in_state(AppState::InGame)))
             .add_event::<LeftClickEvent>();
     }
 }
 
 fn cursor_system(
+    mut next_state: ResMut<NextState<AppState>>,
     btn: Res<Input<MouseButton>>,
+    keyboard_input: Res<Input<KeyCode>>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
     window_query: Query<&Window>,
     mut left_click: EventWriter<LeftClickEvent>,
@@ -38,5 +41,9 @@ fn cursor_system(
                 world_position.x, world_position.y
             );
         }
+    }
+
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        next_state.set(AppState::Menu);
     }
 }
