@@ -1,10 +1,13 @@
 mod components;
+mod input;
 
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
 use rand::prelude::*;
+
+pub use crate::input::*;
 
 use crate::components::*;
 //use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -34,6 +37,7 @@ fn main() {
             FrameTimeDiagnosticsPlugin::default(),
             LogDiagnosticsPlugin::default(),
         ))
+        .add_plugins(InputPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, move_circles)
         //.add_plugins(WorldInspectorPlugin::new())
