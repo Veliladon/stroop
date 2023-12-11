@@ -55,9 +55,9 @@ fn main() {
                 .set(WindowPlugin {
                     primary_window: Some(Window {
                         title: "Stroop".into(),
-                        ..Default::default()
+                        ..default()
                     }),
-                    ..Default::default()
+                    ..default()
                 }), /* .set(LogPlugin {
                         level: bevy::log::Level::INFO,
                         filter: "info,wgpu_core=warn,wgpu_hal=warn".into(),
@@ -106,16 +106,6 @@ fn setup(
     let mesh_resource = MeshResource { 0: mesh.clone() };
 
     commands.insert_resource(mesh_resource);
-
-    /* let mesh: Mesh2dHandle = meshes
-    .add(
-        (shape::Circle {
-            radius: 20.,
-            vertices: 16,
-        })
-        .into(),
-    )
-    .into(); */
 
     let material_red = materials.add(ColorMaterial::from(Color::RED));
     let material_yellow = materials.add(ColorMaterial::from(Color::YELLOW));
@@ -206,23 +196,10 @@ fn menu(
         next_state.set(AppState::GameStart)
     }
 
-    /* if keyboard_input.pressed(KeyCode::I) {
-        next_state.set(AppState::Instructions);
-    } */
-
     if keyboard_input.pressed(KeyCode::Escape) {
         exit.send(AppExit);
     }
 }
-
-/* fn instructions(mut next_state: ResMut<NextState<AppState>>, keyboard_input: Res<Input<KeyCode>>) {
-    if keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Return) {
-        next_state.set(AppState::GameStart)
-    }
-    if keyboard_input.pressed(KeyCode::Escape) {
-        next_state.set(AppState::Menu)
-    }
-} */
 
 fn move_circles(
     mut transform_query: Query<
