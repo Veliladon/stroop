@@ -3,8 +3,8 @@ mod gameplay;
 mod input;
 
 use bevy::app::AppExit;
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-use bevy::log::LogPlugin;
+//use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+//use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::render::render_resource::encase::rts_array::Length;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
@@ -15,7 +15,7 @@ pub use crate::components::*;
 pub use crate::gameplay::*;
 pub use crate::input::*;
 
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+//use bevy_inspector_egui::quick::WorldInspectorPlugin;
 
 pub const NUMBER_ENTITIES: usize = 10_000;
 pub const COLOR_SELECTION: [Color; 5] = [
@@ -37,7 +37,6 @@ pub struct MeshResource(Mesh2dHandle);
 enum AppState {
     #[default]
     Menu,
-    Instructions,
     GameStart,
     InGame,
     NextRound,
@@ -49,28 +48,26 @@ fn main() {
         .insert_resource(ClearColor(Color::BLACK))
         .add_state::<AppState>()
         .add_plugins(
-            DefaultPlugins
-                .set(ImagePlugin::default_nearest())
-                .set(LogPlugin {
-                    level: bevy::log::Level::INFO,
-                    filter: "info,wgpu_core=warn,wgpu_hal=warn".into(),
-                }),
+            DefaultPlugins.set(ImagePlugin::default_nearest()), /* .set(LogPlugin {
+                                                                    level: bevy::log::Level::INFO,
+                                                                    filter: "info,wgpu_core=warn,wgpu_hal=warn".into(),
+                                                                }),*/
         )
-        .add_plugins((
+        /* .add_plugins((
             FrameTimeDiagnosticsPlugin::default(),
             LogDiagnosticsPlugin::default(),
-        ))
+        ))*/
         .add_plugins(InputPlugin)
         .add_plugins(GameplayPlugin)
         .add_systems(Startup, setup)
         .add_systems(OnEnter(AppState::Menu), menu_setup)
         .add_systems(Update, menu.run_if(in_state(AppState::Menu)))
-        .add_systems(
+        /*      .add_systems(
             Update,
             instructions.run_if(in_state(AppState::Instructions)),
-        )
+        )*/
         .add_systems(Update, move_circles)
-        .add_plugins(WorldInspectorPlugin::new())
+        //.add_plugins(WorldInspectorPlugin::new())
         .run();
 }
 
@@ -158,35 +155,64 @@ fn setup(
     }
 }
 
-fn menu_setup() {}
+fn menu_setup(mut commands: Commands) {
+    commands.spawn((
+        // Create a TextBundle that has a Text with a single section.
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            "Welcome to Stroop!\nPress Space or Enter to Start\nPress Esc to Exit",
+            TextStyle {
+                // This font is loaded and will be used instead of the default font.
+                font_size: 40.0,
+                color: Color::WHITE,
+                ..default()
+            },
+        ) // Set the justification of the Text
+        .with_background_color(Color::BLACK)
+        .with_text_alignment(TextAlignment::Center)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            align_items: AlignItems::Center,
+            align_self: AlignSelf::Center,
+            margin: UiRect::all(Val::Auto),
+            ..default()
+        }),
+        MenuText,
+    ));
+}
 
 fn menu(
+    mut commands: Commands,
     mut next_state: ResMut<NextState<AppState>>,
     mut exit: EventWriter<AppExit>,
     keyboard_input: Res<Input<KeyCode>>,
+    text_boxes: Query<(Entity, &Text)>,
 ) {
     if keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Return) {
-        println!("Starting Game");
+        for (text_box, _) in text_boxes.iter() {
+            commands.entity(text_box).despawn();
+        }
         next_state.set(AppState::GameStart)
     }
 
-    if keyboard_input.pressed(KeyCode::I) {
+    /* if keyboard_input.pressed(KeyCode::I) {
         next_state.set(AppState::Instructions);
-    }
+    } */
 
     if keyboard_input.pressed(KeyCode::Escape) {
         exit.send(AppExit);
     }
 }
 
-fn instructions(mut next_state: ResMut<NextState<AppState>>, keyboard_input: Res<Input<KeyCode>>) {
+/* fn instructions(mut next_state: ResMut<NextState<AppState>>, keyboard_input: Res<Input<KeyCode>>) {
     if keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Return) {
         next_state.set(AppState::GameStart)
     }
     if keyboard_input.pressed(KeyCode::Escape) {
         next_state.set(AppState::Menu)
     }
-}
+} */
 
 fn move_circles(
     mut transform_query: Query<

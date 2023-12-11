@@ -13,6 +13,9 @@ pub struct CircleColor(Handle<ColorMaterial>); */
 pub struct Menu;
 
 #[derive(Component)]
+pub struct MenuText;
+
+#[derive(Component)]
 pub struct Offset(pub f32);
 
 #[derive(Component)]

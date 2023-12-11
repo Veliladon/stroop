@@ -27,6 +27,15 @@ struct ColoredWord;
 #[derive(Component)]
 struct ColoredOrWord;
 
+#[derive(Component)]
+struct RemainingTime;
+
+#[derive(Component)]
+struct Score;
+
+#[derive(Component)]
+struct GameOverText;
+
 pub const CORRECT_OR_INCORRECT: [CorrectIncorrect; 2] =
     [CorrectIncorrect::Correct, CorrectIncorrect::Incorrect];
 
@@ -79,7 +88,9 @@ fn setup_game(mut commands: Commands<'_, '_>, mut next_state: ResMut<NextState<A
         .with_style(Style {
             position_type: PositionType::Absolute,
             top: Val::Px(5.0),
-            left: Val::Percent(50.0),
+            align_items: AlignItems::Center,
+            align_self: AlignSelf::Center,
+            margin: UiRect::all(Val::Auto),
             ..default()
         }),
         ColoredWord,
@@ -107,6 +118,52 @@ fn setup_game(mut commands: Commands<'_, '_>, mut next_state: ResMut<NextState<A
         }),
         ColoredOrWord,
     ));
+
+    commands.spawn((
+        // Create a TextBundle that has a Text with a single section.
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            "",
+            TextStyle {
+                // This font is loaded and will be used instead of the default font.
+                font_size: 100.0,
+                color: Color::WHITE,
+                ..default()
+            },
+        ) // Set the justification of the Text
+        .with_background_color(Color::BLACK)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            left: Val::Percent(5.0),
+            ..default()
+        }),
+        RemainingTime,
+    ));
+
+    commands.spawn((
+        // Create a TextBundle that has a Text with a single section.
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            "0",
+            TextStyle {
+                // This font is loaded and will be used instead of the default font.
+                font_size: 100.0,
+                color: Color::WHITE,
+                ..default()
+            },
+        ) // Set the justification of the Text
+        .with_background_color(Color::BLACK)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            left: Val::Percent(20.0),
+            ..default()
+        }),
+        Score,
+    ));
 }
 
 fn score_and_spawn_new_circles(
@@ -116,8 +173,22 @@ fn score_and_spawn_new_circles(
     mesh: Res<MeshResource>,
     mut circle_query: Query<(Entity, &mut Handle<ColorMaterial>), Without<Interactable>>,
     window_query: Query<&Window>,
-    mut colored_word_query: Query<&mut Text, (With<ColoredWord>, Without<ColoredOrWord>)>,
-    mut colored_or_word_query: Query<&mut Text, (With<ColoredOrWord>, Without<ColoredWord>)>,
+    mut colored_word_query: Query<
+        &mut Text,
+        (
+            With<ColoredWord>,
+            Without<ColoredOrWord>,
+            Without<RemainingTime>,
+        ),
+    >,
+    mut colored_or_word_query: Query<
+        &mut Text,
+        (
+            With<ColoredOrWord>,
+            Without<ColoredWord>,
+            Without<RemainingTime>,
+        ),
+    >,
 ) {
     let mut rng = thread_rng();
 
@@ -129,10 +200,10 @@ fn score_and_spawn_new_circles(
 
     let mut color_candidates = colors.0.to_vec().clone();
 
-    let correct_num = rng.gen_range(0..4);
+    let correct_num = rng.gen_range(0..5);
     let (correct_color, correct_color_name, correct_color_const) =
         color_candidates.remove(correct_num);
-    let wrong_num = rng.gen_range(0..3);
+    let wrong_num = rng.gen_range(0..4);
     let (wrong_color, wrong_color_name, wrong_color_const) =
         color_candidates.remove(wrong_num).clone();
 
@@ -160,51 +231,16 @@ fn score_and_spawn_new_circles(
     let mut colored_or_word = colored_or_word_query.single_mut();
     colored_or_word.sections[0].value = word_or_color;
 
-    /* commands.spawn((
-        // Create a TextBundle that has a Text with a single section.
-        TextBundle::from_section(
-            // Accepts a `String` or any type that converts into a `String`, such as `&str`
-            word,
-            TextStyle {
-                // This font is loaded and will be used instead of the default font.
-                font_size: 100.0,
-                color: word_color,
-                ..default()
-            },
-        ) // Set the justification of the Text
-        .with_background_color(Color::BLACK)
-        // Set the style of the TextBundle itself.
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(5.0),
-            left: Val::Percent(50.0),
-            ..default()
-        }),
-        ColoredWord,
-    )); */
-
-    /* commands.spawn((
-        // Create a TextBundle that has a Text with a single section.
-        TextBundle::from_section(
-            // Accepts a `String` or any type that converts into a `String`, such as `&str`
-            word_or_color,
-            TextStyle {
-                // This font is loaded and will be used instead of the default font.
-                font_size: 40.0,
-                color: Color::WHITE,
-                ..default()
-            },
-        ) // Set the justification of the Text
-        .with_background_color(Color::BLACK)
-        // Set the style of the TextBundle itself.
-        .with_style(Style {
-            position_type: PositionType::Absolute,
-            top: Val::Px(5.0),
-            left: Val::Percent(75.0),
-            ..default()
-        }),
-        ColoredOrWord,
-    )); */
+    let correct_top: bool = rng.gen();
+    let correct_y;
+    let incorrect_y;
+    if correct_top {
+        correct_y = rng.gen_range((window_height / 2. + 20.)..(window_height - 160.));
+        incorrect_y = rng.gen_range((160.)..(window_height / 2. - 20.));
+    } else {
+        incorrect_y = rng.gen_range((window_height / 2. + 20.)..(window_height - 160.));
+        correct_y = rng.gen_range((160.)..(window_height / 2. - 20.));
+    }
 
     circle_query.iter_mut().for_each(|(_, mut color)| {
         (*color, _, _) = color_candidates.choose(&mut rng).unwrap().clone();
@@ -216,11 +252,7 @@ fn score_and_spawn_new_circles(
         .spawn(MaterialMesh2dBundle {
             mesh: mesh.0.clone(),
             material: correct_color.clone(),
-            transform: Transform::from_translation(Vec3::new(
-                -20.,
-                rng.gen_range((0.)..(window_height)),
-                3.,
-            )),
+            transform: Transform::from_translation(Vec3::new(-20., correct_y, 3.)),
             ..default()
         })
         .insert(Interactable)
@@ -231,11 +263,7 @@ fn score_and_spawn_new_circles(
         .spawn(MaterialMesh2dBundle {
             mesh: mesh.0.clone(),
             material: wrong_color.clone(),
-            transform: Transform::from_translation(Vec3::new(
-                -20.,
-                rng.gen_range((0.)..(window_height)),
-                3.,
-            )),
+            transform: Transform::from_translation(Vec3::new(-20., incorrect_y, 3.)),
             ..default()
         })
         .insert(Interactable)
@@ -267,6 +295,25 @@ fn move_target_circles(
 fn process_events_and_timers(
     correct_query: Query<(Entity, &Transform), With<Correct>>,
     incorrect_query: Query<(Entity, &Transform), With<Incorrect>>,
+    mut timer_query: Query<
+        &mut Text,
+        (
+            With<RemainingTime>,
+            Without<ColoredWord>,
+            Without<ColoredOrWord>,
+            Without<Score>,
+        ),
+    >,
+
+    mut score_query: Query<
+        &mut Text,
+        (
+            Without<RemainingTime>,
+            Without<ColoredWord>,
+            Without<ColoredOrWord>,
+            With<Score>,
+        ),
+    >,
 
     mut commands: Commands,
     mut game_state: ResMut<GameState>,
@@ -277,28 +324,30 @@ fn process_events_and_timers(
 ) {
     let (correct_entity, correct) = correct_query.single();
     let (incorrect_entity, incorrect) = incorrect_query.single();
+    let mut timer_text = timer_query.single_mut();
+    let mut score_text = score_query.single_mut();
 
     game_state.remaining_time.tick(time.delta());
     if game_state.remaining_time.just_finished() {
         game_state.timer_expired = true;
         next_state.set(AppState::GameOver);
     }
+    timer_text.sections[0].value =
+        format!("{}", game_state.remaining_time.remaining_secs().trunc());
 
     if !missed_event.is_empty() {
-        println!("You Missed!");
         next_state.set(AppState::GameOver);
     }
 
     for event in click_event.read() {
         if event.position.distance(correct.translation.xy()) < 21. {
             game_state.score += 1;
-            println!("Score!");
             commands.entity(correct_entity).despawn();
             commands.entity(incorrect_entity).despawn();
+            score_text.sections[0].value = format!("{}", game_state.score);
             next_state.set(AppState::NextRound);
         }
         if event.position.distance(incorrect.translation.xy()) < 21. {
-            println!("Wrong!");
             next_state.set(AppState::GameOver);
         }
     }
@@ -323,25 +372,58 @@ fn game_over(
         commands.entity(circle).despawn();
     }
 
+    let game_over_text;
+
     if game_state.timer_expired {
-        println!("Congratulations! You won!");
+        game_over_text = format!(
+            "Congratulations! You won!\nScore: {}\n\nPress Space to start or Esc to quit",
+            game_state.score
+        );
     } else {
-        println!("Sorry. You lost!");
+        game_over_text = format!(
+            "Sorry. You lost!\nScore: {}\n\nPress Space to start or Esc to quit",
+            game_state.score
+        );
     }
+
+    commands.spawn((
+        // Create a TextBundle that has a Text with a single section.
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            game_over_text,
+            TextStyle {
+                // This font is loaded and will be used instead of the default font.
+                font_size: 100.0,
+                color: Color::WHITE,
+                ..default()
+            },
+        ) // Set the justification of the Text
+        .with_background_color(Color::BLACK)
+        .with_text_alignment(TextAlignment::Center)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            align_items: AlignItems::Center,
+            align_self: AlignSelf::Center,
+            margin: UiRect::all(Val::Auto),
+            ..default()
+        }),
+        GameOverText,
+    ));
 }
 
 fn game_over_input(
+    mut commands: Commands,
     mut next_state: ResMut<NextState<AppState>>,
     mut exit: EventWriter<AppExit>,
     keyboard_input: Res<Input<KeyCode>>,
+    text_boxes: Query<(Entity, &Text)>,
 ) {
     if keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Return) {
-        println!("Starting Game");
+        for (text_box, _) in text_boxes.iter() {
+            commands.entity(text_box).despawn();
+        }
         next_state.set(AppState::GameStart)
-    }
-
-    if keyboard_input.pressed(KeyCode::I) {
-        next_state.set(AppState::Instructions);
     }
 
     if keyboard_input.pressed(KeyCode::Escape) {
