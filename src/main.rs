@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 mod components;
 mod gameplay;
 mod input;
@@ -48,10 +50,18 @@ fn main() {
         .insert_resource(ClearColor(Color::BLACK))
         .add_state::<AppState>()
         .add_plugins(
-            DefaultPlugins.set(ImagePlugin::default_nearest()), /* .set(LogPlugin {
-                                                                    level: bevy::log::Level::INFO,
-                                                                    filter: "info,wgpu_core=warn,wgpu_hal=warn".into(),
-                                                                }),*/
+            DefaultPlugins
+                .set(ImagePlugin::default_nearest())
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Stroop".into(),
+                        ..Default::default()
+                    }),
+                    ..Default::default()
+                }), /* .set(LogPlugin {
+                        level: bevy::log::Level::INFO,
+                        filter: "info,wgpu_core=warn,wgpu_hal=warn".into(),
+                    }),*/
         )
         /* .add_plugins((
             FrameTimeDiagnosticsPlugin::default(),
