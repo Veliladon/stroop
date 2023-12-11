@@ -61,6 +61,52 @@ fn setup_game(mut commands: Commands<'_, '_>, mut next_state: ResMut<NextState<A
     };
     commands.insert_resource(game_state);
     next_state.set(AppState::NextRound);
+
+    commands.spawn((
+        // Create a TextBundle that has a Text with a single section.
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            "",
+            TextStyle {
+                // This font is loaded and will be used instead of the default font.
+                font_size: 100.0,
+                color: Color::WHITE,
+                ..default()
+            },
+        ) // Set the justification of the Text
+        .with_background_color(Color::BLACK)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            left: Val::Percent(50.0),
+            ..default()
+        }),
+        ColoredWord,
+    ));
+
+    commands.spawn((
+        // Create a TextBundle that has a Text with a single section.
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            "",
+            TextStyle {
+                // This font is loaded and will be used instead of the default font.
+                font_size: 40.0,
+                color: Color::WHITE,
+                ..default()
+            },
+        ) // Set the justification of the Text
+        .with_background_color(Color::BLACK)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            left: Val::Percent(75.0),
+            ..default()
+        }),
+        ColoredOrWord,
+    ));
 }
 
 fn score_and_spawn_new_circles(
@@ -70,6 +116,8 @@ fn score_and_spawn_new_circles(
     mesh: Res<MeshResource>,
     mut circle_query: Query<(Entity, &mut Handle<ColorMaterial>), Without<Interactable>>,
     window_query: Query<&Window>,
+    mut colored_word_query: Query<&mut Text, (With<ColoredWord>, Without<ColoredOrWord>)>,
+    mut colored_or_word_query: Query<&mut Text, (With<ColoredOrWord>, Without<ColoredWord>)>,
 ) {
     let mut rng = thread_rng();
 
@@ -105,7 +153,14 @@ fn score_and_spawn_new_circles(
         }
     }
 
-    commands.spawn((
+    let mut colored_word = colored_word_query.single_mut();
+    colored_word.sections[0].value = word;
+    colored_word.sections[0].style.color = word_color;
+
+    let mut colored_or_word = colored_or_word_query.single_mut();
+    colored_or_word.sections[0].value = word_or_color;
+
+    /* commands.spawn((
         // Create a TextBundle that has a Text with a single section.
         TextBundle::from_section(
             // Accepts a `String` or any type that converts into a `String`, such as `&str`
@@ -126,9 +181,9 @@ fn score_and_spawn_new_circles(
             ..default()
         }),
         ColoredWord,
-    ));
+    )); */
 
-    commands.spawn((
+    /* commands.spawn((
         // Create a TextBundle that has a Text with a single section.
         TextBundle::from_section(
             // Accepts a `String` or any type that converts into a `String`, such as `&str`
@@ -149,7 +204,7 @@ fn score_and_spawn_new_circles(
             ..default()
         }),
         ColoredOrWord,
-    ));
+    )); */
 
     circle_query.iter_mut().for_each(|(_, mut color)| {
         (*color, _, _) = color_candidates.choose(&mut rng).unwrap().clone();
@@ -244,14 +299,30 @@ fn process_events_and_timers(
         }
         if event.position.distance(incorrect.translation.xy()) < 21. {
             println!("Wrong!");
-            commands.entity(correct_entity).despawn();
-            commands.entity(incorrect_entity).despawn();
             next_state.set(AppState::GameOver);
         }
     }
 }
 
-fn game_over(game_state: Res<GameState>) {
+fn game_over(
+    mut commands: Commands,
+    game_state: Res<GameState>,
+    text_boxes: Query<(Entity, &Text)>,
+    correct_query: Query<(Entity, &Transform), With<Correct>>,
+    incorrect_query: Query<(Entity, &Transform), With<Incorrect>>,
+) {
+    for (text_box, _) in text_boxes.iter() {
+        commands.entity(text_box).despawn();
+    }
+
+    for (circle, _) in correct_query.iter() {
+        commands.entity(circle).despawn();
+    }
+
+    for (circle, _) in incorrect_query.iter() {
+        commands.entity(circle).despawn();
+    }
+
     if game_state.timer_expired {
         println!("Congratulations! You won!");
     } else {
