@@ -8,6 +8,7 @@ use bevy::log::LogPlugin;
 use bevy::prelude::*;
 use bevy::render::render_resource::encase::rts_array::Length;
 use bevy::sprite::{MaterialMesh2dBundle, Mesh2dHandle};
+
 use rand::prelude::*;
 
 pub use crate::components::*;
@@ -27,7 +28,7 @@ pub const COLOR_SELECTION: [Color; 5] = [
 pub const CIRCLE_RADIUS: f32 = 20.;
 
 #[derive(Resource, Deref, DerefMut, Clone)]
-pub struct ColorResource([Handle<ColorMaterial>; 5]);
+pub struct ColorResource([(Handle<ColorMaterial>, String, Color); 5]);
 
 #[derive(Resource, Deref, DerefMut, Clone)]
 pub struct MeshResource(Mesh2dHandle);
@@ -116,16 +117,22 @@ fn setup(
     let material_purple = materials.add(ColorMaterial::from(Color::PURPLE));
 
     let color_handles = [
-        material_red,
-        material_yellow,
-        material_green,
-        material_blue,
-        material_purple,
+        material_red.clone(),
+        material_yellow.clone(),
+        material_green.clone(),
+        material_blue.clone(),
+        material_purple.clone(),
     ];
 
-    let color_resource = ColorResource {
-        0: color_handles.clone(),
-    };
+    let color_resource = [
+        (material_red.clone(), "RED".to_string(), Color::RED),
+        (material_yellow.clone(), "YELLOW".to_string(), Color::YELLOW),
+        (material_green.clone(), "GREEN".to_string(), Color::GREEN),
+        (material_blue.clone(), "BLUE".to_string(), Color::BLUE),
+        (material_purple.clone(), "PURPLE".to_string(), Color::PURPLE),
+    ];
+
+    let color_resource = ColorResource { 0: color_resource };
 
     commands.insert_resource(color_resource);
 

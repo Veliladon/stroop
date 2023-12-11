@@ -9,6 +9,27 @@ pub struct GameState {
     timer_expired: bool,
 }
 
+#[derive(Clone)]
+pub enum CorrectIncorrect {
+    Correct,
+    Incorrect,
+}
+
+#[derive(Clone)]
+pub enum WordOrColor {
+    Word,
+    Color,
+}
+
+#[derive(Component)]
+struct ColoredWord;
+
+#[derive(Component)]
+struct ColoredOrWord;
+
+pub const CORRECT_OR_INCORRECT: [CorrectIncorrect; 2] =
+    [CorrectIncorrect::Correct, CorrectIncorrect::Incorrect];
+
 #[derive(Event)]
 pub struct MissedCircleEvent;
 
@@ -55,16 +76,83 @@ fn score_and_spawn_new_circles(
     let window = window_query.single();
     let window_height = window.height();
 
-    let mut color_candidates = colors.to_vec();
-    let correct_num = rng.gen_range(0..4);
-    let correct_color = color_candidates.remove(correct_num);
-    let wrong_num = rng.gen_range(0..3);
-    let wrong_color = color_candidates.remove(wrong_num);
+    let correct_or_incorrect: CorrectIncorrect =
+        CORRECT_OR_INCORRECT.choose(&mut rng).unwrap().clone();
 
-    println!("{:?}", color_candidates);
+    let mut color_candidates = colors.0.to_vec().clone();
+
+    let correct_num = rng.gen_range(0..4);
+    let (correct_color, correct_color_name, correct_color_const) =
+        color_candidates.remove(correct_num);
+    let wrong_num = rng.gen_range(0..3);
+    let (wrong_color, wrong_color_name, wrong_color_const) =
+        color_candidates.remove(wrong_num).clone();
+
+    let word;
+    let word_color;
+    let word_or_color;
+
+    match correct_or_incorrect {
+        CorrectIncorrect::Correct => {
+            word = correct_color_name.clone();
+            word_color = wrong_color_const.clone();
+            word_or_color = "As Written".to_string();
+        }
+        CorrectIncorrect::Incorrect => {
+            word = wrong_color_name.clone();
+            word_color = correct_color_const.clone();
+            word_or_color = "As Colored".to_string();
+        }
+    }
+
+    commands.spawn((
+        // Create a TextBundle that has a Text with a single section.
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            word,
+            TextStyle {
+                // This font is loaded and will be used instead of the default font.
+                font_size: 100.0,
+                color: word_color,
+                ..default()
+            },
+        ) // Set the justification of the Text
+        .with_background_color(Color::BLACK)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            left: Val::Percent(50.0),
+            ..default()
+        }),
+        ColoredWord,
+    ));
+
+    commands.spawn((
+        // Create a TextBundle that has a Text with a single section.
+        TextBundle::from_section(
+            // Accepts a `String` or any type that converts into a `String`, such as `&str`
+            word_or_color,
+            TextStyle {
+                // This font is loaded and will be used instead of the default font.
+                font_size: 40.0,
+                color: Color::WHITE,
+                ..default()
+            },
+        ) // Set the justification of the Text
+        .with_background_color(Color::BLACK)
+        // Set the style of the TextBundle itself.
+        .with_style(Style {
+            position_type: PositionType::Absolute,
+            top: Val::Px(5.0),
+            left: Val::Percent(75.0),
+            ..default()
+        }),
+        ColoredOrWord,
+    ));
 
     circle_query.iter_mut().for_each(|(_, mut color)| {
-        *color = color_candidates.choose(&mut rng).unwrap().clone();
+        (*color, _, _) = color_candidates.choose(&mut rng).unwrap().clone();
     });
 
     let offset: f32 = rng.gen();
