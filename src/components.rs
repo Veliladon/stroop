@@ -26,18 +26,3 @@ pub struct Interactable;
 
 #[derive(Component)]
 pub struct Instructions;
-
-#[derive(Component, Clone, PartialEq, Debug)]
-pub struct GroupOne;
-
-#[derive(Component, Clone, PartialEq, Debug)]
-pub struct GroupTwo;
-
-#[derive(Component, Clone, PartialEq, Debug)]
-pub struct GroupThree;
-
-#[derive(Component, Clone, PartialEq, Debug)]
-pub struct GroupFour;
-
-#[derive(Component, Clone, PartialEq, Debug)]
-pub struct GroupFive;

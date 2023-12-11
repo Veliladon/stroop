@@ -37,8 +37,9 @@ enum AppState {
     #[default]
     Menu,
     Instructions,
+    GameStart,
     InGame,
-    Scoring,
+    NextRound,
     GameOver,
 }
 
@@ -131,7 +132,7 @@ fn setup(
     for color in 0..color_handles.length() {
         let circle_color = &color_handles[color].clone();
         for _ in 0..NUMBER_ENTITIES / color_handles.length() {
-            let entity = commands
+            commands
                 .spawn(MaterialMesh2dBundle {
                     mesh: mesh.clone(),
                     material: circle_color.clone(),
@@ -145,36 +146,9 @@ fn setup(
                 .insert(Velocity {
                     x: rng.gen(),
                     y: 0.,
-                })
-                .id();
-            match color {
-                0 => commands.entity(entity).insert(GroupOne),
-                1 => commands.entity(entity).insert(GroupTwo),
-                2 => commands.entity(entity).insert(GroupThree),
-                3 => commands.entity(entity).insert(GroupFour),
-                4 => commands.entity(entity).insert(GroupFive),
-                _ => unreachable!("What color are you?"),
-            };
+                });
         }
     }
-
-    /*for _ in 0..NUMBER_ENTITIES {
-        commands
-                .spawn(MaterialMesh2dBundle {
-                    mesh: mesh.clone(),
-                    material: color_handles.choose(&mut rng).unwrap().clone(),
-                    transform: Transform::from_translation(Vec3::new(
-                        rng.gen_range((0.)..(window_width)),
-                        rng.gen_range((0.)..(window_height)),
-                        1. + rand::random::<f32>(),
-                    )),
-                    ..default()
-                })
-                .insert(Velocity {
-                    x: rng.gen(),
-                    y: 0.,
-                });
-    } */
 }
 
 fn menu_setup() {}
@@ -185,7 +159,8 @@ fn menu(
     keyboard_input: Res<Input<KeyCode>>,
 ) {
     if keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Return) {
-        next_state.set(AppState::Scoring)
+        println!("Starting Game");
+        next_state.set(AppState::GameStart)
     }
 
     if keyboard_input.pressed(KeyCode::I) {
@@ -199,7 +174,7 @@ fn menu(
 
 fn instructions(mut next_state: ResMut<NextState<AppState>>, keyboard_input: Res<Input<KeyCode>>) {
     if keyboard_input.pressed(KeyCode::Space) || keyboard_input.pressed(KeyCode::Return) {
-        next_state.set(AppState::InGame)
+        next_state.set(AppState::GameStart)
     }
     if keyboard_input.pressed(KeyCode::Escape) {
         next_state.set(AppState::Menu)
