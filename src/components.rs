@@ -6,9 +6,6 @@ pub struct Velocity {
     pub y: f32,
 }
 
-/* #[derive(Component, Clone, PartialEq, Debug)]
-pub struct CircleColor(Handle<ColorMaterial>); */
-
 #[derive(Component)]
 pub struct Menu;
 

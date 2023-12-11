@@ -58,26 +58,14 @@ fn main() {
                         ..default()
                     }),
                     ..default()
-                }), /* .set(LogPlugin {
-                        level: bevy::log::Level::INFO,
-                        filter: "info,wgpu_core=warn,wgpu_hal=warn".into(),
-                    }),*/
+                }),
         )
-        /* .add_plugins((
-            FrameTimeDiagnosticsPlugin::default(),
-            LogDiagnosticsPlugin::default(),
-        ))*/
         .add_plugins(InputPlugin)
         .add_plugins(GameplayPlugin)
         .add_systems(Startup, setup)
         .add_systems(OnEnter(AppState::Menu), menu_setup)
         .add_systems(Update, menu.run_if(in_state(AppState::Menu)))
-        /*      .add_systems(
-            Update,
-            instructions.run_if(in_state(AppState::Instructions)),
-        )*/
         .add_systems(Update, move_circles)
-        //.add_plugins(WorldInspectorPlugin::new())
         .run();
 }
 
